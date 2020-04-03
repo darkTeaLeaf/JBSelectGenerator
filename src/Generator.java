@@ -40,27 +40,30 @@ public class Generator {
      * caseSensitive - whether to use LIKE or ILIKE operation for varchar columns
      */
     public List<String> generateSelects(String tablePattern, String query, boolean caseSensitive) {
+        if(this.database == null){
+            throw new RuntimeException("you did not load .yaml file with database structure");
+        }
+
         if (!checkTablePattern(tablePattern)) {
             throw new RuntimeException("syntax of table pattern is incorrect");
         }
 
         String[] names = tablePattern.split("\\\\.");
         ArrayList<Table> tables = getTablesList(names);
+        ArrayList<String> selects = new ArrayList<>();
 
         if (tables.isEmpty()) {
-            throw new RuntimeException("there is no tables matches pattern");
+            return selects;
         }
 
         String like = caseSensitive ? "ILIKE" : "LIKE";
-
         String typeQuery = determineType(query);
-        ArrayList<String> selects = new ArrayList<>();
 
         for (Table table : tables) {
             StringBuilder partAfterWhere = new StringBuilder();
 
             for (Column column : table.getColumns()) {
-                if (column.getType().matches("varchar\\([0-9]+\\)")) {
+                if (column.getType().contains("varchar")) {
                     if(partAfterWhere.length() != 0){
                         partAfterWhere.append(" OR ");
                     }
@@ -73,7 +76,11 @@ public class Generator {
                             partAfterWhere.append(" OR ");
                         }
 
-                        partAfterWhere.append(column.getName()).append(" = ").append(query);
+                        if(!typeQuery.equals("date")) {
+                            partAfterWhere.append(column.getName()).append(" = ").append(query);
+                        }else {
+                            partAfterWhere.append(column.getName()).append(" = '").append(query).append("'");
+                        }
                     }
                 }
             }
@@ -135,10 +142,9 @@ public class Generator {
             return "boolean";
         }
 
-        if (query.matches("^((18|19|20)[0-9]{2}-(0[1-9]|[12][0-9]|3[01])-(0[13578]|1[02]))" +
-                "|((18|19|20)[0-9]{2}-(0[1-9]|[12][0-9]|30)-(0[469]|11))" +
-                "|((18|19|20)[0-9]{2}-(0[1-9]|1[0-9]|2[0-8])-(02))|" +
-                "((((18|19|20)(04|08|[2468][048]|[13579][26]))|2000)-29-(02))$")) {
+        if (query.matches("^\\d{4}[\\-/\\s]?((((0[13578])|" +
+                "(1[02]))[\\-/\\s]?(([0-2][0-9])|(3[01])))|(((0[469])|" +
+                "(11))[\\-/\\s]?(([0-2][0-9])|(30)))|(02[\\-/\\s]?[0-2][0-9]))$")) {
             return "date";
         }
 

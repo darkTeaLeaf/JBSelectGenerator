@@ -1,0 +1,43 @@
+schemas:
+  - name: sakila
+    tables:
+      - name: actor
+        columns:
+          - name: actor_id
+            type: integer
+          - name: first_name
+            type: varchar(45)
+          - name: last_name
+            type: varchar(45)
+          - name: last_update
+            type: date
+          - name: has_kids
+            type: boolean
+      - name: address
+        columns:
+          - name: address_id
+            type: integer
+          - name: city_id
+            type: integer
+  - name: book_store
+    tables:
+      - name: book
+        columns:
+          - name: book_id
+            type: integer
+          - name: name
+            type: varchar(45)
+          - name: author
+            type: varchar(45)
+          - name: published
+            type: date
+          - name: bestseller
+            type: boolean
+      - name: address
+        columns:
+          - name: store_id
+            type: integer
+          - name: city_id
+            type: integer
+          - name: has_terminal
+            type: boolean
