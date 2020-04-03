@@ -1,5 +1,12 @@
 package database;
 
+/**
+ * Column instance contains information about
+ * name and type of column in database
+ *
+ * @author Arina Fedorovskaya
+ */
+
 public class Column {
     private String name;
     private String type;

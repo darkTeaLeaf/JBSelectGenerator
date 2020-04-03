@@ -1,8 +1,8 @@
 import database.Column;
 import database.Database;
 import database.Schema;
-
 import database.Table;
+
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -11,10 +11,21 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generate all possible SELECT queries from given
+ * database structure according to given query test
+ *
+ * @author Arina Fedorovskaya
+ */
+
 public class Generator {
     private Constructor constructor;
     private Database database;
 
+    /**
+     * Constructor a {@code Generator}
+     * Defines strict types for objects to which .yaml file is converted
+     */
     Generator() {
         this.constructor = new Constructor(Database.class);
         TypeDescription customTypeDescription = new TypeDescription(Database.class);
@@ -24,6 +35,11 @@ public class Generator {
         this.constructor.addTypeDescription(customTypeDescription);
     }
 
+    /**
+     * Convert given .yaml file with database structure to Java object
+     *
+     * @param filepath path to .yaml file
+     */
     public void load(String filepath) {
         Yaml yaml = new Yaml(this.constructor);
         InputStream inputStream = this.getClass()
@@ -34,10 +50,13 @@ public class Generator {
     }
 
     /**
-     * tablePattern - regexp of qualified table name
-     * e.g. "sakila\.actor ", "sakila\..*", ".*\.person"
-     * query - text to find in database e.g. "Alice", "42", "true"
-     * caseSensitive - whether to use LIKE or ILIKE operation for varchar columns
+     * Generate SELECT queries for loaded database structure according to query text
+     *
+     * @param   tablePattern    regexp of qualified table name
+     *                          e.g. "sakila\.actor", "sakila\..*", ".*\.person"
+     * @param   query           text to find in database
+     *                          e.g. "Alice", "42", "true"
+     * @param   caseSensitive   whether to use LIKE or ILIKE operation for varchar columns
      */
     public List<String> generateSelects(String tablePattern, String query, boolean caseSensitive) {
         if(this.database == null){
@@ -94,9 +113,24 @@ public class Generator {
         return selects;
     }
 
+    /**
+     * Check table pattern for correctness
+     *
+     * @param tablePattern pattern to check
+     * @return true if patter in form "name_schema\.name_table"
+     *         with ".*" valid for name_schema and name_table
+     */
+
     private boolean checkTablePattern(String tablePattern) {
         return tablePattern.matches("^([a-zA-z]+|\\.\\*)\\\\.([a-zA-z]+|\\.\\*)$");
     }
+
+    /**
+     * Get {@code ArrayList} of tables related to table pattern
+     *
+     * @param names array of schema and table name from pattern
+     * @return {@code ArrayList} with related tables
+     */
 
     private ArrayList<Table> getTablesList(String[] names) {
         ArrayList<Table> tables = new ArrayList<>();
@@ -133,6 +167,12 @@ public class Generator {
         return tables;
     }
 
+    /**
+     * Determine the type of query: boolean, integer, date or varchar
+     *
+     * @param query text to find in database
+     * @return string with corresponded type
+     */
     private String determineType(String query) {
         if (query.matches("^[0-9]+$")) {
             return "integer";
